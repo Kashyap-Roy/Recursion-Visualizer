@@ -480,6 +480,9 @@ function convertJavaExpr(expr) {
     expr = expr.replace(/\.substring\s*\(/g, '.slice(');
     expr = expr.replace(/\.charAt\s*\((\w+)\)/g, '[$1]');
     expr = expr.replace(/Integer\.parseInt/g, 'parseInt');
+    // Java integer division: k/10 truncates for int types, JS does float division
+    // Wrap standalone division (not inside %, not //) with Math.trunc()
+    expr = expr.replace(/([a-zA-Z0-9_\)]+)\s*\/\s*([a-zA-Z0-9_\(]+)/g, 'Math.trunc($1 / $2)');
     return expr;
 }
 
