@@ -4,7 +4,7 @@
    ============================================================ */
 
 // ── Constants ──
-const RECURSION_LIMIT = 200;
+const RECURSION_LIMIT = 1000;
 
 const EXAMPLES = {
     python: {
@@ -621,7 +621,8 @@ function executeCode(code, fnCall) {
     } catch (e) {
         if (e.isRecursionLimit) {
             callCounter = stepCount;
-            throw e;
+            callTree = rootChildren[0] || null;
+            throw { isRecursionLimit: true, tree: callTree };
         }
         throw new Error('Runtime error: ' + e.message);
     }
@@ -840,15 +841,9 @@ function run() {
         } catch (e) {
             updateStepBadge();
             if (e.isRecursionLimit) {
-                vizTree.innerHTML = '';
-                vizTree.classList.remove('active');
-                vizPlaceholder.classList.remove('hidden');
-                
-                hideError();
-                
-                setTimeout(() => {
-                    alert('Too many steps! Lower the values.');
-                }, 10);
+                renderTree(e.tree);
+                showError('Recursion limit reached (1000 steps). Visualization truncated.');
+                consolePrint('Recursion limit reached. Visualization truncated.', true);
             } else {
                 showError(e.message);
                 consolePrint(e.message, true);
@@ -861,9 +856,9 @@ function run() {
 
 function updateStepBadge() {
     stepCount.textContent = callCounter;
-    if (callCounter > 150) {
+    if (callCounter > 900) {
         stepCount.className = 'step-count danger';
-    } else if (callCounter > 100) {
+    } else if (callCounter > 500) {
         stepCount.className = 'step-count warning';
     } else {
         stepCount.className = 'step-count';
