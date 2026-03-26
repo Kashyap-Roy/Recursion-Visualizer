@@ -787,6 +787,26 @@ consoleOutput.addEventListener('wheel', (e) => {
     }
 }, { passive: false });
 
+let editorFontSize = 14; // Default defined in CSS
+
+function initEditorZoom() {
+    if(!editor || !editor.getWrapperElement) return;
+    const wrapper = editor.getWrapperElement();
+    wrapper.addEventListener('wheel', (e) => {
+        if (e.altKey) {
+            e.preventDefault(); 
+            if (e.deltaY < 0) {
+                editorFontSize += 1;
+            } else {
+                editorFontSize -= 1;
+            }
+            editorFontSize = Math.max(8, Math.min(48, editorFontSize)); 
+            wrapper.style.fontSize = editorFontSize + 'px';
+            editor.refresh();
+        }
+    }, { passive: false });
+}
+
 // ══════════════════════════════════════════════════════════════
 //  EVENT HANDLERS
 // ══════════════════════════════════════════════════════════════
@@ -865,6 +885,7 @@ function resetEditor() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initEditor();
+    initEditorZoom();
 
     btnPython.addEventListener('click', () => {
         switchLanguage('python');
