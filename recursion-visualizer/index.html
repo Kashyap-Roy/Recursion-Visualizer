@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursion Visualizer — Code & Trace</title>
+    <meta name="description" content="Write recursive functions in Python or Java and visualize the call tree step-by-step with animated blocks.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    
+    <link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Header -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect x="2" y="2" width="28" height="28" rx="6" stroke="url(#logoGrad)" stroke-width="2.5"/>
+                    <path d="M10 22V10h4c3 0 5 1.5 5 4s-2 4-5 4h-4" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="22" cy="22" r="3" fill="url(#logoGrad)" opacity="0.6"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+                            <stop stop-color="#818cf8"/>
+                            <stop offset="1" stop-color="#c084fc"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1>Recursion<span class="accent">Viz</span></h1>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="lang-toggle" id="langToggle">
+                <button class="lang-btn active" data-lang="python" id="btnPython">
+                    <span class="lang-icon">🐍</span> Python
+                </button>
+                <button class="lang-btn" data-lang="java" id="btnJava">
+                    <span class="lang-icon">☕</span> Java
+                </button>
+                <div class="toggle-slider" id="toggleSlider"></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="step-badge" id="stepBadge">
+                <span class="step-label">Calls</span>
+                <span class="step-count" id="stepCount">0</span>
+                <span class="step-limit">/ 100</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="errorBanner">
+        <div class="error-content">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 6v5M10 13.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span id="errorText">Error</span>
+        </div>
+        <button class="error-close" id="errorClose" aria-label="Close error">&times;</button>
+    </div>
+
+    <!-- Main Content -->
+    <main id="app-main">
+        <!-- Editor Panel -->
+        <section class="panel editor-panel" id="editorPanel">
+            <div class="panel-header">
+                <h2>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M5 13l-3 3V3a1 1 0 011-1h12a1 1 0 011 1v9a1 1 0 01-1 1H5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                    </svg>
+                    Code Editor
+                </h2>
+                <div class="panel-actions">
+                    <button class="icon-btn" id="btnReset" title="Reset to example">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M2 8a6 6 0 0111.47-2.47M14 8A6 6 0 012.53 10.47" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M14 2v4h-4M2 14v-4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="editor-wrapper" id="editorWrapper">
+                <textarea id="codeEditor"></textarea>
+            </div>
+            <div class="editor-footer">
+                <div class="input-group" id="inputGroup">
+                    <label for="fnInput">Function call:</label>
+                    <input type="text" id="fnInput" placeholder="e.g. factorial(5)" autocomplete="off" spellcheck="false">
+                </div>
+                <button class="run-btn" id="btnRun">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M4 3l11 6-11 6V3z" fill="currentColor"/>
+                    </svg>
+                    Run
+                </button>
+            </div>
+        </section>
+
+        <!-- Visualization Panel -->
+        <section class="panel viz-panel" id="vizPanel">
+            <div class="panel-header">
+                <h2>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                        <rect x="11" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                        <rect x="6" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M4 7v3a1 1 0 001 1h1M14 7v3a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    Call Tree
+                </h2>
+                <div class="panel-actions">
+                    <button class="icon-btn" id="btnCollapseAll" title="Collapse all">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="btnExpandAll" title="Expand all">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 10l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="viz-content" id="vizContent">
+                <div class="viz-placeholder" id="vizPlaceholder">
+                    <div class="placeholder-icon">
+                        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                            <rect x="8" y="4" width="48" height="12" rx="4" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                            <rect x="16" y="22" width="40" height="12" rx="4" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                            <rect x="24" y="40" width="32" height="12" rx="4" stroke="currentColor" stroke-width="2" opacity="0.15"/>
+                            <rect x="24" y="52" width="32" height="8" rx="4" stroke="currentColor" stroke-width="2" opacity="0.1"/>
+                        </svg>
+                    </div>
+                    <p>Write a recursive function and click <strong>Run</strong> to visualize the call tree</p>
+                    <span class="placeholder-hint">Supports Python & Java</span>
+                </div>
+                <div class="viz-tree" id="vizTree"></div>
+            </div>
+            <!-- Console Output -->
+            <div class="console-resizer" id="consoleResizer" title="Drag to resize console"></div>
+            <div class="console-panel" id="consolePanel">
+                <div class="console-header">
+                    <span>Console Output <small style="opacity: 0.6; font-weight: 400; text-transform: none; margin-left: 8px;">(Alt+Scroll to scale text)</small></span>
+                    <button class="icon-btn" id="btnClearConsole" title="Clear console">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="console-output" id="consoleOutput"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    
+    <script src="app.js?v=6"></script>
+</body>
+</html>
